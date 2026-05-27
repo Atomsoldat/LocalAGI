@@ -62,6 +62,17 @@ const (
 	ActionSearchMemory                   = "search_memory"
 	ActionPiKVMPowerControl              = "pikvm_power_control"
 	ActionWebhook                        = "webhook"
+	ActionGithubIssueList                = "github-issue-list"
+	ActionGithubIssueAssigner            = "github-issue-assigner"
+	ActionGithubProjectGetFields         = "github-project-get-fields"
+	ActionGithubProjectAddItem           = "github-project-add-item"
+	ActionGithubProjectUpdateStatus      = "github-project-update-item-status"
+	ActionGithubProjectListItems         = "github-project-list-items"
+	ActionGithubProjectReport            = "github-project-report"
+	ActionGithubProjectRemoveItem        = "github-project-remove-item"
+	ActionGithubProjectSetField          = "github-project-set-field"
+	ActionGithubMilestoneManager         = "github-milestone-manager"
+	ActionGithubIssueBulkLabeler         = "github-issue-bulk-labeler"
 )
 
 const (
@@ -111,6 +122,17 @@ var AvailableActions = []string{
 	ActionSearchMemory,
 	ActionPiKVMPowerControl,
 	ActionWebhook,
+	ActionGithubIssueList,
+	ActionGithubIssueAssigner,
+	ActionGithubProjectGetFields,
+	ActionGithubProjectAddItem,
+	ActionGithubProjectUpdateStatus,
+	ActionGithubProjectListItems,
+	ActionGithubProjectReport,
+	ActionGithubProjectRemoveItem,
+	ActionGithubProjectSetField,
+	ActionGithubMilestoneManager,
+	ActionGithubIssueBulkLabeler,
 }
 
 var DefaultActions = []config.FieldGroup{
@@ -319,6 +341,61 @@ var DefaultActions = []config.FieldGroup{
 		Label:  "Webhook",
 		Fields: actions.WebhookConfigMeta(),
 	},
+	{
+		Name:   "github-issue-list",
+		Label:  "GitHub Issue List",
+		Fields: actions.GithubIssueListConfigMeta(),
+	},
+	{
+		Name:   "github-issue-assigner",
+		Label:  "GitHub Issue Assigner",
+		Fields: actions.GithubIssueAssignerConfigMeta(),
+	},
+	{
+		Name:   "github-project-get-fields",
+		Label:  "GitHub Project Get Fields",
+		Fields: actions.GithubProjectGetFieldsConfigMeta(),
+	},
+	{
+		Name:   "github-project-add-item",
+		Label:  "GitHub Project Add Item",
+		Fields: actions.GithubProjectAddItemConfigMeta(),
+	},
+	{
+		Name:   "github-project-update-item-status",
+		Label:  "GitHub Project Update Item Status",
+		Fields: actions.GithubProjectUpdateStatusConfigMeta(),
+	},
+	{
+		Name:   "github-project-list-items",
+		Label:  "GitHub Project List Items",
+		Fields: actions.GithubProjectListItemsConfigMeta(),
+	},
+	{
+		Name:   "github-project-report",
+		Label:  "GitHub Project Report",
+		Fields: actions.GithubProjectReportConfigMeta(),
+	},
+	{
+		Name:   "github-project-remove-item",
+		Label:  "GitHub Project Remove Item",
+		Fields: actions.GithubProjectRemoveItemConfigMeta(),
+	},
+	{
+		Name:   "github-project-set-field",
+		Label:  "GitHub Project Set Field",
+		Fields: actions.GithubProjectSetFieldConfigMeta(),
+	},
+	{
+		Name:   "github-milestone-manager",
+		Label:  "GitHub Milestone Manager",
+		Fields: actions.GithubMilestoneManagerConfigMeta(),
+	},
+	{
+		Name:   "github-issue-bulk-labeler",
+		Label:  "GitHub Issue Bulk Labeler",
+		Fields: actions.GithubIssueBulkLabelerConfigMeta(),
+	},
 }
 
 const (
@@ -497,6 +574,28 @@ func Action(name, agentName string, config map[string]string, pool *state.AgentP
 		_, _, _, a = actions.NewMemoryActions(memoryIdxPath, config)
 	case ActionPiKVMPowerControl:
 		a = actions.NewPiKVMAction(config)
+	case ActionGithubIssueList:
+		a = actions.NewGithubIssueList(config)
+	case ActionGithubIssueAssigner:
+		a = actions.NewGithubIssueAssigner(config)
+	case ActionGithubProjectGetFields:
+		a = actions.NewGithubProjectGetFields(config)
+	case ActionGithubProjectAddItem:
+		a = actions.NewGithubProjectAddItem(config)
+	case ActionGithubProjectUpdateStatus:
+		a = actions.NewGithubProjectUpdateStatus(config)
+	case ActionGithubProjectListItems:
+		a = actions.NewGithubProjectListItems(config)
+	case ActionGithubProjectReport:
+		a = actions.NewGithubProjectReport(config)
+	case ActionGithubProjectRemoveItem:
+		a = actions.NewGithubProjectRemoveItem(config)
+	case ActionGithubProjectSetField:
+		a = actions.NewGithubProjectSetField(config)
+	case ActionGithubMilestoneManager:
+		a = actions.NewGithubMilestoneManager(config)
+	case ActionGithubIssueBulkLabeler:
+		a = actions.NewGithubIssueBulkLabeler(config)
 	default:
 		xlog.Error("Action not found", "name", name)
 		return nil, fmt.Errorf("Action not found")
