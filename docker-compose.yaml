@@ -50,6 +50,8 @@ services:
     environment:
       - SSH_USER=root
       - SSH_PASSWORD=root
+    volumes:
+      - sshbox_repos:/upstream-repos
     #  - DOCKER_HOST=tcp://dind:2375
     #depends_on:
     #  dind:
@@ -113,3 +115,4 @@ volumes:
   backends:
   images:
   localagi_pool:
+  sshbox_repos:
