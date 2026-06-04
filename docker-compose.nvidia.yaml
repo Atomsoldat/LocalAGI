@@ -23,10 +23,10 @@ services:
       file: docker-compose.yaml
       service: postgres
 
-  dind:
-    extends:
-      file: docker-compose.yaml
-      service: dind
+  #dind:
+  #  extends:
+  #    file: docker-compose.yaml
+  #    service: dind
 
   localagi:
     extends:
