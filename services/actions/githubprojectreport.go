@@ -22,11 +22,17 @@ func (g *GithubProjectReport) Run(ctx context.Context, _ *types.AgentSharedState
 	p := struct {
 		GroupBy          string `json:"group_by"`
 		IncludeAssignees bool   `json:"include_assignees"`
+		ExcludeClosed    *bool  `json:"exclude_closed"`
 	}{}
 	_ = params.Unmarshal(&p)
 
 	if p.GroupBy == "" {
 		p.GroupBy = "Status"
+	}
+	// Default to excluding closed issues.
+	excludeClosed := true
+	if p.ExcludeClosed != nil {
+		excludeClosed = *p.ExcludeClosed
 	}
 
 	pc := g.projectClient()
@@ -69,9 +75,32 @@ func (g *GithubProjectReport) Run(ctx context.Context, _ *types.AgentSharedState
 		cursor = next
 	}
 
-	// Group items by the target field value.
+	// Look up issue state for items that reference issues, so we can
+	// annotate and optionally filter closed ones.
+	issueStates := map[int]string{} // issue number -> "open"/"closed"
+	if g.repository != "" && g.repoOwner != "" {
+		for _, item := range allItems {
+			if item.Content == nil || item.Content.Number <= 0 || item.ContentType != "Issue" {
+				continue
+			}
+			issue, _, err := g.client.Issues.Get(ctx, g.repoOwner, g.repository, item.Content.Number)
+			if err != nil {
+				continue
+			}
+			issueStates[item.Content.Number] = issue.GetState()
+		}
+	}
+
+	// Group items by the target field value, optionally filtering closed issues.
 	groups := map[string][]ProjectV2ItemDetail{}
+	closedCount := 0
 	for _, item := range allItems {
+		if excludeClosed && item.Content != nil && item.Content.Number > 0 {
+			if state, ok := issueStates[item.Content.Number]; ok && state == "closed" {
+				closedCount++
+				continue
+			}
+		}
 		val := "(none)"
 		groupFieldID := groupField.ID.String()
 		for _, f := range item.Fields {
@@ -97,7 +126,7 @@ func (g *GithubProjectReport) Run(ctx context.Context, _ *types.AgentSharedState
 	for _, name := range optionNames {
 		items := groups[name]
 		printed[name] = true
-		ids := itemIDs(items)
+		ids := itemIDsWithState(items, issueStates)
 		sb.WriteString(fmt.Sprintf("| %s | %d | %s |\n", name, len(items), ids))
 		total += len(items)
 	}
@@ -105,24 +134,31 @@ func (g *GithubProjectReport) Run(ctx context.Context, _ *types.AgentSharedState
 		if printed[name] {
 			continue
 		}
-		ids := itemIDs(items)
+		ids := itemIDsWithState(items, issueStates)
 		sb.WriteString(fmt.Sprintf("| %s | %d | %s |\n", name, len(items), ids))
 		total += len(items)
 	}
 
 	sb.WriteString(fmt.Sprintf("\n**Total:** %d items\n", total))
+	if closedCount > 0 {
+		sb.WriteString(fmt.Sprintf("(%d closed issues excluded)\n", closedCount))
+	}
 
 	return types.ActionResult{Result: sb.String()}, nil
 }
 
-func itemIDs(items []ProjectV2ItemDetail) string {
+func itemIDsWithState(items []ProjectV2ItemDetail, issueStates map[int]string) string {
 	if len(items) == 0 {
 		return "-"
 	}
 	ids := make([]string, 0, len(items))
 	for _, item := range items {
 		if item.Content != nil && item.Content.Number > 0 {
-			ids = append(ids, fmt.Sprintf("#%d", item.Content.Number))
+			label := fmt.Sprintf("#%d", item.Content.Number)
+			if state, ok := issueStates[item.Content.Number]; ok && state == "closed" {
+				label += " (closed)"
+			}
+			ids = append(ids, label)
 		} else {
 			ids = append(ids, fmt.Sprintf("ID:%d", item.ID))
 		}
@@ -137,7 +173,7 @@ func (g *GithubProjectReport) Definition() types.ActionDefinition {
 	}
 	return types.ActionDefinition{
 		Name:        types.ActionDefinitionName(actionName),
-		Description: "Generate a status report of the GitHub Project board, grouped by a field (default: Status). Shows counts per category.",
+		Description: "Generate a status report of the GitHub Project board, grouped by a field (default: Status). Shows counts per category. Closed issues are excluded by default.",
 		Properties: map[string]jsonschema.Definition{
 			"group_by": {
 				Type:        jsonschema.String,
@@ -146,6 +182,10 @@ func (g *GithubProjectReport) Definition() types.ActionDefinition {
 			"include_assignees": {
 				Type:        jsonschema.Boolean,
 				Description: "Include per-assignee breakdown in the report.",
+			},
+			"exclude_closed": {
+				Type:        jsonschema.Boolean,
+				Description: "Exclude closed issues from the report. Default: true.",
 			},
 		},
 		Required: []string{},
