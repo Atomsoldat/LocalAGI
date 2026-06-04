@@ -41,6 +41,16 @@ fi\n\
 
 RUN chmod +x /start.sh
 
+# --- opencode tooling ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g opencode-ai @ai-sdk/openai-compatible
+
+RUN git config --global user.email "agent@local" \
+ && git config --global user.name  "LocalAGI Agent"
+
 EXPOSE 22
 
 CMD ["/start.sh"]
