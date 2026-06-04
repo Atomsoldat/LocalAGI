@@ -94,7 +94,8 @@ services:
       - DATABASE_URL=postgresql://localrecall:localrecall@postgres:5432/localrecall?sslmode=disable
       - EMBEDDING_MODEL=granite-embedding-107m-multilingual
       - LOCALAGI_TIMEOUT=5m
-      - LOCALAGI_ENABLE_CONVERSATIONS_LOGGING=false
+      - LOCALAGI_ENABLE_CONVERSATIONS_LOGGING=true
+      - LOCALAI_ENABLE_TRACING=true
       - LOCALAGI_SSHBOX_URL=root:root@sshbox:22
       - DOCKER_HOST=tcp://dind:2375
     extra_hosts:
