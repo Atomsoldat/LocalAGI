@@ -55,7 +55,8 @@ RUN apt-get update && apt-get install -y \
     docker.io \
     bash \
     wget \
-    curl
+    curl \
+    git
 
 # Copy the webui binary from the builder stage to the final image
 COPY --from=builder /work/localagi /localagi

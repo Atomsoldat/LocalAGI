@@ -73,6 +73,7 @@ const (
 	ActionGithubProjectSetField          = "github-project-set-field"
 	ActionGithubMilestoneManager         = "github-milestone-manager"
 	ActionGithubIssueBulkLabeler         = "github-issue-bulk-labeler"
+	ActionGitPushBranch                  = "git-push-branch"
 )
 
 const (
@@ -133,6 +134,7 @@ var AvailableActions = []string{
 	ActionGithubProjectSetField,
 	ActionGithubMilestoneManager,
 	ActionGithubIssueBulkLabeler,
+	ActionGitPushBranch,
 }
 
 var DefaultActions = []config.FieldGroup{
@@ -305,6 +307,11 @@ var DefaultActions = []config.FieldGroup{
 		Name:   "call_agents",
 		Label:  "Call Agents",
 		Fields: actions.CallAgentConfigMeta(),
+	},
+	{
+		Name:   "git-push-branch",
+		Label:  "Git Push Branch",
+		Fields: actions.GitPushBranchConfigMeta(),
 	},
 	{
 		Name:   "send-telegram-message",
@@ -596,6 +603,8 @@ func Action(name, agentName string, config map[string]string, pool *state.AgentP
 		a = actions.NewGithubMilestoneManager(config)
 	case ActionGithubIssueBulkLabeler:
 		a = actions.NewGithubIssueBulkLabeler(config)
+	case ActionGitPushBranch:
+		a = actions.NewGitPushBranch(config)
 	default:
 		xlog.Error("Action not found", "name", name)
 		return nil, fmt.Errorf("Action not found")
