@@ -5,7 +5,6 @@ services:
       service: localai
     environment:
       - LOCALAI_SINGLE_ACTIVE_BACKEND=true
-      - LOCALAI_FORCE_META_BACKEND_CAPABILITY=nvidia
       - DEBUG=true
     image: localai/localai:master-gpu-nvidia-cuda-12
     # For images with python backends, use:
@@ -23,10 +22,10 @@ services:
       file: docker-compose.yaml
       service: postgres
 
-  #dind:
-  #  extends:
-  #    file: docker-compose.yaml
-  #    service: dind
+  dind:
+    extends:
+      file: docker-compose.yaml
+      service: dind
 
   localagi:
     extends:

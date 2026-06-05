@@ -50,28 +50,24 @@ services:
     environment:
       - SSH_USER=root
       - SSH_PASSWORD=root
-    volumes:
-      - repos:/repos
-    #  - DOCKER_HOST=tcp://dind:2375
-    #depends_on:
-    #  dind:
-    #    condition: service_healthy
+      - DOCKER_HOST=tcp://dind:2375
+    depends_on:
+      dind:
+        condition: service_healthy
 
-  # a privileged dind container is  a security threat and not necessary for most tasks we have in mind
-  # if we later want agents to run docker commands, we can provide them with a VM
-  #dind:
-  #  image: docker:dind
-  #  privileged: true
-  #  command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "-H", "unix:///var/run/docker.sock"]
-  #  environment:
-  #    - DOCKER_TLS_CERTDIR=""
-  #  expose:
-  #    - 2375
-  #  healthcheck:
-  #    test: ["CMD", "docker", "info"]
-  #    interval: 10s
-  #    timeout: 5s
-  #    retries: 3
+  dind:
+    image: docker:dind
+    privileged: true
+    command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "-H", "unix:///var/run/docker.sock"]
+    environment:
+      - DOCKER_TLS_CERTDIR=""
+    expose:
+      - 2375
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   localagi:
     depends_on:
@@ -79,8 +75,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      #dind:
-      #  condition: service_healthy
+      dind:
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile.webui
@@ -98,15 +94,13 @@ services:
       - DATABASE_URL=postgresql://localrecall:localrecall@postgres:5432/localrecall?sslmode=disable
       - EMBEDDING_MODEL=granite-embedding-107m-multilingual
       - LOCALAGI_TIMEOUT=5m
-      - LOCALAGI_ENABLE_CONVERSATIONS_LOGGING=true
-      - LOCALAI_ENABLE_TRACING=true
+      - LOCALAGI_ENABLE_CONVERSATIONS_LOGGING=false
       - LOCALAGI_SSHBOX_URL=root:root@sshbox:22
-      #- DOCKER_HOST=tcp://dind:2375
+      - DOCKER_HOST=tcp://dind:2375
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - localagi_pool:/pool
-      - repos:/repos
       # Optional: mount a host directory for skills (replaces the default state-dir/skills path)
       # - ./skills:/pool/skills
 
@@ -116,4 +110,3 @@ volumes:
   backends:
   images:
   localagi_pool:
-  repos:
